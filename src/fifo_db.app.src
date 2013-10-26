@@ -5,6 +5,9 @@
   {registered, []},
   {applications, [
                   kernel,
+                  hanoidb,
+                  eleveldb,
+                  bitcask,
                   stdlib
                  ]},
   {mod, { fifo_db_app, []}},
