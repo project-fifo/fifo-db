@@ -11,10 +11,10 @@
 -behaviour(fifo_db_driver).
 
 %% API
--export([init/2, put/4, transact/2, get/3, fold/4, fold_keys/4,
+-export([init/3, put/4, transact/2, get/3, fold/4, fold_keys/4,
          delete/3, terminate/2, code_change/3]).
 
--ignore_xref([init/1, put/4, transact/2, get/3, fold/4, fold_keys/4,
+-ignore_xref([init/3, put/4, transact/2, get/3, fold/4, fold_keys/4,
               delete/3, terminate/2, code_change/3]).
 
 -record(state, {db}).
@@ -25,7 +25,7 @@
 %%% API
 %%%===================================================================
 
-init(DBLoc, Name) ->
+init(DBLoc, Name, _) ->
     {ok, Db} = hanoidb:open(DBLoc ++ "/" ++ atom_to_list(Name)),
     {ok, #state{db = Db}}.
 
