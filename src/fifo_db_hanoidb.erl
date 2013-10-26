@@ -43,7 +43,7 @@ get(Bucket, Key, State) ->
         {ok, Bin} ->
             {{ok, binary_to_term(Bin)}, State};
         E ->
-            {E, not_found, State}
+            {E, State}
     end.
 
 delete(Bucket, Key, State) ->
