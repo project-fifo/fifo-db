@@ -113,9 +113,12 @@ handle_call({transact, Transaction}, _From, {Backend, State}) ->
     {Reply, State1} = Backend:transact(Transaction, State),
     {reply, Reply, {Backend, State1}};
 
-
 handle_call({get, Bucket, Key}, _From, {Backend, State}) ->
     {Reply, State1} = Backend:get(Bucket, Key, State),
+    {reply, Reply, {Backend, State1}};
+
+handle_call({delete, Bucket, Key}, _From, {Backend, State}) ->
+    {Reply, State1} = Backend:delete(Bucket, Key, State),
     {reply, Reply, {Backend, State1}};
 
 handle_call({fold, Bucket, FoldFn, Acc0}, _From, {Backend, State}) ->
