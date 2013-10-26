@@ -8,6 +8,7 @@
                   hanoidb,
                   eleveldb,
                   bitcask,
+                  lager,
                   stdlib
                  ]},
   {mod, { fifo_db_app, []}},
