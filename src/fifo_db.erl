@@ -176,4 +176,4 @@ terminate(Reason, {Backend, State}) ->
 %%--------------------------------------------------------------------
 code_change(OldVsn, {Backend, State}, Extra) ->
     {ok, State1} = Backend:code_change(OldVsn, State, Extra),
-    {ok, {Backend, State}}.
+    {ok, {Backend, State1}}.
