@@ -58,7 +58,7 @@ start(Name, Opts) ->
 start(Name, Opts, Backend) ->
     case erlang:whereis(Name) of
         undefined ->
-            sniffle_db_sup:start_child(Name, Backend, Opts);
+            fifo_db_sup:start_child(Name, Backend, Opts);
         _ ->
             ok
     end.
