@@ -40,7 +40,8 @@ transact(Transaction, _From, State) ->
 get(Bucket, Key, From, State) ->
     spawn(
       fun () ->
-              case eleveldb:get(State#state.db, <<Bucket/binary, Key/binary>>) of
+              case eleveldb:get(State#state.db,
+                                <<Bucket/binary, Key/binary>>, []) of
                   {ok, Bin} ->
                       gen_server:reply(From, {ok, binary_to_term(Bin)});
                   E ->
@@ -53,27 +54,37 @@ delete(Bucket, Key, _From, State) ->
     R = eleveldb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
     {reply, R, State}.
 
-fold(Bucket, FoldFn, Acc0, _From, State) ->
-    Len = byte_size(Bucket),
-    R = eleveldb:fold(State#state.db,
-                      fun ({<<ThisBucket:Len/binary, Key/binary>>, Value}, Acc)
-                            when Bucket =:= ThisBucket ->
-                              FoldFn(Key, binary_to_term(Value), Acc);
-                          ({_, _}, Acc) ->
-                              Acc
-                      end, Acc0, []),
-    {reply, R, State}.
+fold(Bucket, FoldFn, Acc0, From, State) ->
+    spawn(
+      fun () ->
+              Len = byte_size(Bucket),
+              R = eleveldb:fold(State#state.db,
+                                fun ({<<ThisBucket:Len/binary, Key/binary>>,
+                                      Value}, Acc)
+                                      when Bucket =:= ThisBucket ->
+                                        FoldFn(Key, binary_to_term(Value), Acc);
+                                    ({_, _}, Acc) ->
+                                        Acc
+                                end, Acc0, []),
+              gen_server:reply(From, R)
+      end),
+    {noreply, State}.
 
-fold_keys(Bucket, FoldFn, Acc0, _From, State) ->
-    Len = byte_size(Bucket),
-    R = eleveldb:fold_keys(State#state.db,
-                           fun (<<ThisBucket:Len/binary, Key/binary>>, Acc)
-                                 when Bucket =:= ThisBucket ->
-                                   FoldFn(Key, Acc);
-                               (_, Acc) ->
-                                   Acc
-                           end, Acc0, []),
-    {reply, R, State}.
+fold_keys(Bucket, FoldFn, Acc0, From, State) ->
+    spawn(
+      fun () ->
+              Len = byte_size(Bucket),
+              R = eleveldb:fold_keys(State#state.db,
+                                     fun (<<ThisBucket:Len/binary, Key/binary>>,
+                                          Acc)
+                                           when Bucket =:= ThisBucket ->
+                                             FoldFn(Key, Acc);
+                                         (_, Acc) ->
+                                             Acc
+                                     end, Acc0, []),
+              gen_server:reply(From, R)
+      end),
+    {noreply, State}.
 
 list_keys(Bucket, _From, State) ->
     FoldFn = fun(K, Ks) ->
