@@ -37,13 +37,17 @@ transact(Transaction, _From, State) ->
     R = transact_int(State#state.db, Transaction),
     {reply, R, State}.
 
-get(Bucket, Key, _From, State) ->
-    case eleveldb:get(State#state.db, <<Bucket/binary, Key/binary>>, []) of
-        {ok, Bin} ->
-            {reply, {ok, binary_to_term(Bin)}, State};
-        E ->
-            {reply, E, State}
-    end.
+get(Bucket, Key, From, State) ->
+    spawn(
+      fun () ->
+              case eleveldb:get(State#state.db, <<Bucket/binary, Key/binary>>) of
+                  {ok, Bin} ->
+                      gen_server:reply(From, {ok, binary_to_term(Bin)});
+                  E ->
+                      gen_server:reply(From, E)
+              end
+      end),
+    {noreply, State}.
 
 delete(Bucket, Key, _From, State) ->
     R = eleveldb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
