@@ -38,31 +38,43 @@ transact(Transaction, _From, State) ->
     R = hanoidb:transact(State#state.db, Transaction),
     {reply, R, State}.
 
-get(Bucket, Key, _From, State) ->
-    case hanoidb:get(State#state.db, <<Bucket/binary, Key/binary>>) of
-        {ok, Bin} ->
-            {reply, {ok, binary_to_term(Bin)}, State};
-        E ->
-            {reply, E, State}
-    end.
+get(Bucket, Key, From, State) ->
+    spawn(
+      fun () ->
+              case hanoidb:get(State#state.db, <<Bucket/binary, Key/binary>>) of
+                  {ok, Bin} ->
+                      gen_server:reply(From, {ok, binary_to_term(Bin)});
+                  E ->
+                      gen_server:reply(From, E)
+              end
+      end),
+    {noreply, State}.
 
 delete(Bucket, Key, _From, State) ->
     R = hanoidb:delete(State#state.db, <<Bucket/binary, Key/binary>>),
     {reply, R, State}.
 
-fold(Bucket, FoldFn, Acc0, _From, State) ->
-    R = int_fold(State#state.db, Bucket,
-                 fun(Key, Value, Acc) ->
-                         FoldFn(Key, binary_to_term(Value), Acc)
-                 end, Acc0),
-    {reply, R, State}.
+fold(Bucket, FoldFn, Acc0, From, State) ->
+    spawn(
+      fun () ->
+              R = int_fold(State#state.db, Bucket,
+                           fun(Key, Value, Acc) ->
+                                   FoldFn(Key, binary_to_term(Value), Acc)
+                           end, Acc0),
+              gen_server:reply(From, R)
+      end),
+    {noreply, State}.
 
-fold_keys(Bucket, FoldFn, Acc0, _From, State) ->
-    R = int_fold(State#state.db, Bucket,
-                 fun(Key, _, Acc) ->
-                         FoldFn(Key, Acc)
-                 end, Acc0),
-    {reply, R, State}.
+fold_keys(Bucket, FoldFn, Acc0, From, State) ->
+    spawn(
+      fun () ->
+              R = int_fold(State#state.db, Bucket,
+                           fun(Key, _, Acc) ->
+                                   FoldFn(Key, Acc)
+                           end, Acc0),
+              gen_server:reply(From, R)
+      end),
+    {noreply, State}.
 
 list_keys(Bucket, _From, State) ->
     FoldFn = fun(K, Ks) ->
