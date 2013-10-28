@@ -1,5 +1,6 @@
 REBAR=./rebar
-.phony: all test
+
+.PHONY: all test
 
 all: compile
 

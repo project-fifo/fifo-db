@@ -12,10 +12,10 @@
 
 %% API
 -export([init/3, put/4, transact/2, get/3, fold/4, fold_keys/4,
-         delete/3, terminate/2, code_change/3]).
+         delete/3, terminate/2, code_change/3, list_keys/2]).
 
 -ignore_xref([init/3, put/4, transact/2, get/3, fold/4, fold_keys/4,
-              delete/3, terminate/2, code_change/3]).
+              delete/3, terminate/2, code_change/3, list_keys/2]).
 
 -include("bitcask.hrl").
 
@@ -75,6 +75,13 @@ fold_keys(Bucket, FoldFn, Acc0, State) ->
                           end,
                           Acc0),
     {R, State}.
+
+list_keys(Bucket, State) ->
+    FoldFn = fun(K, Ks) ->
+                     [K | Ks]
+             end,
+    fold_keys(Bucket, FoldFn, [], State).
+
 
 terminate(_Reason, #state{db = Db} = _State) ->
     bitcask:close(Db).

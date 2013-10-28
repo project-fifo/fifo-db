@@ -21,7 +21,8 @@
          delete/3,
          put/4,
          fold/4,
-         fold_keys/4]).
+         fold_keys/4,
+         list_keys/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -53,9 +54,9 @@ start(Name) ->
 
 start(Name, Opts) ->
     {ok, Backend} = application:get_env(fifo_db, backend),
-    start(Name, Opts, Backend).
+    start(Name, Backend, Opts).
 
-start(Name, Opts, Backend) ->
+start(Name, Backend, Opts) ->
     case erlang:whereis(Name) of
         undefined ->
             fifo_db_sup:start_child(Name, Backend, Opts);
@@ -81,6 +82,9 @@ fold(Name, Bucket, FoldFn, Acc0) ->
 fold_keys(Name, Bucket, FoldFn, Acc0) ->
     gen_server:call(Name, {fold_keys, Bucket, FoldFn, Acc0}).
 
+list_keys(Name, Bucket) ->
+    gen_server:call(Name, {list_keys, Bucket}).
+
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
@@ -89,7 +93,10 @@ init([Name, Backend, Opts]) when is_atom(Name),
                                  is_atom(Backend) ->
     {ok, DBLoc} = application:get_env(fifo_db, db_path),
     {ok, State} = Backend:init(DBLoc, Name, Opts),
-    {ok, {Backend, State}}.
+    {ok, {Backend, State}};
+init(P) ->
+    lager:error("Invalid init parameters: ~p", [P]),
+    {stop, error, undefined}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -119,6 +126,10 @@ handle_call({get, Bucket, Key}, _From, {Backend, State}) ->
 
 handle_call({delete, Bucket, Key}, _From, {Backend, State}) ->
     {Reply, State1} = Backend:delete(Bucket, Key, State),
+    {reply, Reply, {Backend, State1}};
+
+handle_call({list_keys, Bucket}, _From, {Backend, State}) ->
+    {Reply, State1} = Backend:list_keys(Bucket, State),
     {reply, Reply, {Backend, State1}};
 
 handle_call({fold, Bucket, FoldFn, Acc0}, _From, {Backend, State}) ->

@@ -11,6 +11,7 @@ behaviour_info(callbacks) ->
      {get, 3},
      {fold, 4},
      {fold_keys, 4},
+     {list_keys, 2},
      {delete, 3},
      {terminate, 2},
      {code_change, 3}];

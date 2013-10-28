@@ -12,5 +12,5 @@
                   stdlib
                  ]},
   {mod, { fifo_db_app, []}},
-  {env, []}
+  {env, [{backend, fifo_db_hanoidb}]}
  ]}.
