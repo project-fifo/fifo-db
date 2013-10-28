@@ -6,13 +6,13 @@
 
 behaviour_info(callbacks) ->
     [{init, 3},
-     {put, 4},
-     {transact, 2},
-     {get, 3},
-     {fold, 4},
-     {fold_keys, 4},
-     {list_keys, 2},
-     {delete, 3},
+     {put, 5},
+     {transact, 3},
+     {get, 4},
+     {fold, 5},
+     {fold_keys, 5},
+     {list_keys, 3},
+     {delete, 4},
      {terminate, 2},
      {code_change, 3}];
 

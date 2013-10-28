@@ -16,6 +16,7 @@
          start/1,
          start/2,
          start/3,
+         sync_get/3,
          get/3,
          transact/2,
          delete/3,
@@ -73,6 +74,9 @@ put(Name, Bucket, Key, Value) ->
 get(Name, Bucket, Key) ->
     gen_server:call(Name, {get, Bucket, Key}).
 
+sync_get(Name, Bucket, Key) ->
+    gen_server:call(Name, {sync_get, Bucket, Key}).
+
 delete(Name, Bucket, Key) ->
     gen_server:call(Name, {delete, Bucket, Key}).
 
@@ -112,33 +116,61 @@ init(P) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({put, Bucket, Key, Value}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:put(Bucket, Key, Value, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({put, Bucket, Key, Value}, From, {Backend, State}) ->
+    case Backend:put(Bucket, Key, Value, From, State)  of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({transact, Transaction}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:transact(Transaction, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({transact, Transaction}, From, {Backend, State}) ->
+    case Backend:transact(Transaction, From, State) of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({get, Bucket, Key}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:get(Bucket, Key, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({get, Bucket, Key}, From, {Backend, State}) ->
+    case Backend:get(Bucket, Key, From, State) of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({delete, Bucket, Key}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:delete(Bucket, Key, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({delete, Bucket, Key}, From, {Backend, State}) ->
+    case Backend:delete(Bucket, Key, From, State)  of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({list_keys, Bucket}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:list_keys(Bucket, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({list_keys, Bucket}, From, {Backend, State}) ->
+    case Backend:list_keys(Bucket, From, State) of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({fold, Bucket, FoldFn, Acc0}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:fold(Bucket, FoldFn, Acc0, State),
-    {reply, Reply, {Backend, State1}};
+handle_call({fold, Bucket, FoldFn, Acc0}, From, {Backend, State}) ->
+    case Backend:fold(Bucket, FoldFn, Acc0, From, State) of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end;
 
-handle_call({fold_keys, Bucket, FoldFn, Acc0}, _From, {Backend, State}) ->
-    {Reply, State1} = Backend:fold_keys(Bucket, FoldFn, Acc0, State),
-    {reply, Reply, {Backend, State1}}.
+handle_call({fold_keys, Bucket, FoldFn, Acc0}, From, {Backend, State}) ->
+    case Backend:fold_keys(Bucket, FoldFn, Acc0, From, State) of
+        {reply, Reply, State1} ->
+            {reply, Reply, {Backend, State1}};
+        {noreply, State1} ->
+            {noreply, {Backend, State1}}
+    end.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -174,7 +206,7 @@ handle_info(_Info, State) ->
 %% necessary cleaning up. When it returns, the gen_server terminates
 %% with Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, State) -> void()
+%% @spec terminate(Reason, From, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
 terminate(Reason, {Backend, State}) ->
