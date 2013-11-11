@@ -1,23 +1,48 @@
 -module(fifo_db_driver).
 
--export([behaviour_info/1]).
-
 -export([encode_key/1, encode_key/2, decode_key/1]).
 
-behaviour_info(callbacks) ->
-    [{init, 3},
-     {put, 5},
-     {transact, 3},
-     {get, 4},
-     {fold, 5},
-     {fold_keys, 5},
-     {list_keys, 3},
-     {delete, 4},
-     {terminate, 2},
-     {code_change, 3}];
+-type calback_reply() :: calback_reply(any()).
+-type calback_reply(ReplyType) :: {noreply, State::term()} |
+                         {reply, Reply::ReplyType, State::term()}.
 
-behaviour_info(_Other) ->
-    undefined.
+-type fold_fn() :: fun((Key::binary(), Value::term(), Acc) -> Acc).
+
+-type fold_key_fn() :: fun((Key::binary(), Acc) -> Acc).
+
+-type transaction_op() :: {delete, Key::binary()} |
+                          {put, Key::binary(), Value::term()}.
+
+
+
+-callback init(DBLock::string(), Name::atom(), Opts::[term()]) ->
+    {ok, State::term()}.
+
+-callback put(Bucket::binary(), Keyt::binary(), Value::term(), _From::pid(),
+              State::term()) ->
+    calback_reply().
+-callback transact(Transaction::[transaction_op()], From::pid(),
+                   State::term()) ->
+    calback_reply().
+-callback get(Buckett::binary(), Key::binary(), From::pid(), State::term()) ->
+    calback_reply().
+-callback delete(Bucket::binary(), Key::binary(), _From::pid(),
+                 State::term()) ->
+    calback_reply().
+-callback fold(Bucket::binary(), FoldFn::fold_fn(), Acc0::term(),
+               From::pid(), State::term()) ->
+    calback_reply().
+-callback fold_keys(Bucket::binary(), FoldFn::fold_key_fn(), Acc0::term(),
+                    From::pid(), State::term()) ->
+    calback_reply().
+-callback list_keys(Bucket::binary(), _From::pid(), State::term()) ->
+    calback_reply([binary()]).
+
+-callback terminate(Reason::atom(), State::term()) ->
+    ok.
+-callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
+    {ok, State::term()}.
+
 
 -spec encode_key({Bucket::binary(), Key::binary()}) -> binary().
 encode_key({Bucket, Key}) ->
