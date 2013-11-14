@@ -7,16 +7,17 @@
 %% @doc Default database destination
 {mapping, "db.backend", "fifo_db.backend",
  [{default, leveldb},
-  {datatype, {enum, [hanoidb, bitcask, leveldb]}}]}.
+  {datatype, {enum, [leveldb, hanoidb, bitcask]}}]}.
 
 {translation,
  "fifo_db.backend",
  fun(Conf) ->
-         [{_, B}] = cuttlefish_util:filter_by_variable_starts_with("db.backend", Conf),
+         B = proplists:get_value(["db", "backend"], Conf),
          case B of
              hanoidb -> fifo_db_hanoidb;
              bitcask -> fifo_db_bitcask;
-             leveldb -> fifo_db_leveldb
+             leveldb -> fifo_db_leveldb;
+             _ -> B
          end
  end
 }.
