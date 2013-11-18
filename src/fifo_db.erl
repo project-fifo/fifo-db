@@ -96,6 +96,7 @@ list_keys(Name, Bucket) ->
 init([Name, Backend, Opts]) when is_atom(Name),
                                  is_atom(Backend) ->
     {ok, DBLoc} = application:get_env(fifo_db, db_path),
+    lager:info("Opening ~s  in ~s as backend ~p with options: ~p", [Name, DBLoc, Backend, Opts]),
     {ok, State} = Backend:init(DBLoc, Name, Opts),
     {ok, {Backend, State}};
 init(P) ->
