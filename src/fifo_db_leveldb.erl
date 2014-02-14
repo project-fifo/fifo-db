@@ -23,9 +23,25 @@
 %%% API
 %%%===================================================================
 
+
+open_opts([K | Ks], Opts) ->
+    case application:get_env(eleveldb, K) of
+        {ok, V} ->
+            open_opts(Ks, [{K, V} | Opts]);
+        _ ->
+            open_opts(Ks, Opts)
+    end;
+
+open_opts([], Opts) ->
+    Opts.
+
 init(DBLoc, Name, _) ->
-    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name),
-                             [{create_if_missing, true}]),
+    Keys = [total_leveldb_mem_percent, total_leveldb_mem, limited_developer_mem,
+            use_bloomfilter, sst_block_size, block_restart_interval,
+            verify_compaction, eleveldb_threads, fadvise_willneed,
+            delete_threshold],
+    Opts = open_opts(Keys, [{create_if_missing, true}]),
+    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts),
     {ok, #state{db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->

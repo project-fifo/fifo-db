@@ -120,3 +120,24 @@
  [{default, true},
   {datatype, {enum, [true, false]}},
   {level, advanced}]}.
+
+%% @doc The number of worker threads performing LevelDB operations.
+{mapping, "leveldb.threads", "eleveldb.eleveldb_threads",
+ [{default, 71},
+  {datatype, integer},
+  {level, advanced}]}.
+
+%% @doc Option to override LevelDB's use of fadvise(DONTNEED) with
+%% fadvise(WILLNEED) instead.  WILLNEED can reduce disk activity on
+%% systems where physical memory exceeds the database size.
+{mapping, "leveldb.fadvise_willneed", "eleveldb.fadvise_willneed",
+ [{default, false},
+  {datatype, {enum, [true, false]}},
+  {level, advanced}]}.
+
+%% @doc Controls when a background compaction initiates solely
+%% due to the number of delete tombstones within an individual
+%% .sst table file.  Value of 'off' disables the feature.
+{mapping, "leveldb.compaction.trigger.tombstone_count", "eleveldb.delete_threshold",
+ [{default, 1000},
+  {datatype, [integer, {atom, off}]}]}.
