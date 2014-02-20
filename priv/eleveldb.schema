@@ -9,13 +9,20 @@
 
 %% @doc This parameter defines the percentage, 1 to 100, of total
 %% server memory to assign to leveldb.  leveldb will dynamically
-%% adjust it internal cache sizes as Riak activates / inactivates
+%% adjust it internal cache sizs as Riak activates / inactivates
 %% vnodes on this server to stay within this size.  The memory size
 %% can alternately be assigned as a byte count via total_leveldb_mem instead.
 {mapping, "leveldb.total_leveldb_mem_percent", "eleveldb.total_leveldb_mem_percent",
  [{default, "80"},
   {datatype, integer}]}.
 
+
+%% @doc the Size of the mmaped chunkes, this should be tuned according to
+%% the number of open files and total memory present.
+%% Default is 20MB
+{mapping, "leveldb.mmap_size", "eleveldb.mmap_size",
+ [{datatype, bytesize},
+  {level, advanced}]}.
 
 %% @doc This parameter defines the number of bytes of
 %% server memory to assign to leveldb.  leveldb will dynamically
@@ -86,7 +93,6 @@
          end
  end
 }.
-
 
 %% @doc sst_block_size defines the size threshold for a block / chunk of data
 %% within one .sst table file. Each new block gets an index entry in the .sst

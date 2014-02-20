@@ -37,7 +37,7 @@ open_opts([], Opts) ->
 
 init(DBLoc, Name, _) ->
     Keys = [total_leveldb_mem_percent, total_leveldb_mem, limited_developer_mem,
-            use_bloomfilter, sst_block_size, block_restart_interval,
+            use_bloomfiltar, sst_block_size, block_restart_interval,
             verify_compaction, eleveldb_threads, fadvise_willneed,
             delete_threshold],
     Opts = open_opts(Keys, [{create_if_missing, true}]),
