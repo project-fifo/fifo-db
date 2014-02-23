@@ -25,23 +25,34 @@
 
 
 open_opts([K | Ks], Opts) ->
-    case application:get_env(eleveldb, K) of
-        {ok, V} ->
-            open_opts(Ks, [{K, V} | Opts]);
+    case proplists:is_defined(K, Opts) of
+        true ->
+            open_opts(Ks, Opts);
         _ ->
-            open_opts(Ks, Opts)
+            case application:get_env(eleveldb, K) of
+                {ok, V} ->
+                    open_opts(Ks, [{K, V} | Opts]);
+                _ ->
+                    open_opts(Ks, Opts)
+            end
     end;
 
 open_opts([], Opts) ->
     Opts.
 
-init(DBLoc, Name, _) ->
+init(DBLoc, Name, Opts) ->
     Keys = [total_leveldb_mem_percent, total_leveldb_mem, limited_developer_mem,
             use_bloomfiltar, sst_block_size, block_restart_interval,
             verify_compaction, eleveldb_threads, fadvise_willneed,
-            delete_threshold],
-    Opts = open_opts(Keys, [{create_if_missing, true}]),
-    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts),
+            delete_threshold, mmap_size],
+    Opts1 = open_opts(Keys, Opts),
+    Opts2 = case proplists:is_defined(create_if_misisng, Opts1) of
+                true ->
+                    Opts1;
+                false ->
+                    [{create_if_missing, true} | Opts1]
+            end,
+    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2),
     {ok, #state{db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->
