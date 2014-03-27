@@ -140,3 +140,19 @@
  [{default, false},
   {datatype, {enum, [true, false]}},
   {level, advanced}]}.
+
+%% @doc En or disables compression for the leveldb database.
+{mapping, "leveldb.compression", "eleveldb.compression",
+ [{default, off},
+  {datatype, {enum, [on, off]}}]}.
+
+{translation,
+ "eleveldb.compression",
+ fun(Conf) ->
+         case cuttlefish_util:conf_get_value("leveldb.compression", Conf) of
+             on -> true;
+             off -> false;
+             _ -> true
+         end
+ end
+}.
