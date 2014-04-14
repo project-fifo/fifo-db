@@ -53,12 +53,12 @@
 {translation,
  "hanoidb.sync_strategy",
  fun(Conf) ->
-         Setting = cuttlefish_util:conf_get_value("hanoidb.sync_strategy", Conf),
+         Setting = cuttlefish:conf_get("hanoidb.sync_strategy", Conf),
          case Setting of
              none -> none;
              sync -> sync;
              interval ->
-                 Interval = cuttlefish_util:conf_get_value("hanoidb.sync_interval", Conf, undefined),
+                 Interval = cuttlefish:conf_get("hanoidb.sync_interval", Conf, undefined),
                  {seconds, Interval};
              _Default -> none
          end

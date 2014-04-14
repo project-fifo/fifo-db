@@ -51,12 +51,12 @@
 {translation,
  "bitcask.sync_strategy",
  fun(Conf) ->
-         Setting = cuttlefish_util:conf_get_value("bitcask.sync_strategy", Conf),
+         Setting = cuttlefish:conf_get("bitcask.sync_strategy", Conf),
          case Setting of
              none -> none;
              o_sync -> o_sync;
              interval ->
-                 Interval = cuttlefish_util:conf_get_value("bitcask.sync_interval", Conf, undefined),
+                 Interval = cuttlefish:conf_get("bitcask.sync_interval", Conf, undefined),
                  {seconds, Interval};
              _Default -> none
          end
@@ -103,13 +103,13 @@
 {translation,
  "bitcask.merge_window",
  fun(Conf) ->
-         Setting = cuttlefish_util:conf_get_value("bitcask.merge_window", Conf),
+         Setting = cuttlefish:conf_get("bitcask.merge_window", Conf),
          case Setting of
              always -> always;
              never -> never;
              window ->
-                 Start = cuttlefish_util:conf_get_value("bitcask.merge_window.start", Conf, undefined),
-                 End = cuttlefish_util:conf_get_value("bitcask.merge_window.end", Conf, undefined),
+                 Start = cuttlefish:conf_get("bitcask.merge_window.start", Conf, undefined),
+                 End = cuttlefish:conf_get("bitcask.merge_window.end", Conf, undefined),
                  {Start, End};
              _Default -> always
          end

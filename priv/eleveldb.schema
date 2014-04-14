@@ -86,7 +86,7 @@
 {translation,
  "eleveldb.use_bloomfilter",
  fun(Conf) ->
-         case cuttlefish_util:conf_get_value("leveldb.bloomfilter", Conf) of
+         case cuttlefish:conf_get("leveldb.bloomfilter", Conf) of
              on -> true;
              off -> false;
              _ -> true
@@ -149,7 +149,7 @@
 {translation,
  "eleveldb.compression",
  fun(Conf) ->
-         case cuttlefish_util:conf_get_value("leveldb.compression", Conf) of
+         case cuttlefish:conf_get("leveldb.compression", Conf) of
              on -> true;
              off -> false;
              _ -> true
