@@ -85,15 +85,20 @@ fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
-              R = eleveldb:fold(State#state.db,
+              try eleveldb:fold(State#state.db,
                                 fun ({<<ThisBucket:Len/binary, Key/binary>>,
                                       Value}, Acc)
                                       when Bucket =:= ThisBucket ->
                                         FoldFn(Key, binary_to_term(Value), Acc);
                                     ({_, _}, Acc) ->
                                         throw({done, Acc})
-                                end, Acc0, [{first_key, Bucket}]),
-              gen_server:reply(From, R)
+                                end, Acc0, [{first_key, Bucket}]) of
+                  R ->
+                      gen_server:reply(From, R)
+              catch
+                  R ->
+                      gen_server:reply(From, R)
+              end
       end),
     {noreply, State}.
 
@@ -101,15 +106,21 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
-              R = eleveldb:fold_keys(State#state.db,
+              try eleveldb:fold_keys(State#state.db,
                                      fun (<<ThisBucket:Len/binary, Key/binary>>,
                                           Acc)
                                            when Bucket =:= ThisBucket ->
                                              FoldFn(Key, Acc);
                                          (_, Acc) ->
                                              throw({done, Acc})
-                                     end, Acc0, [{first_key, Bucket}]),
-              gen_server:reply(From, R)
+                                     end, Acc0, [{first_key, Bucket}]) of
+                  R ->
+                      gen_server:reply(From, R)
+              catch
+                  R ->
+                      gen_server:reply(From, R)
+              end
+
       end),
     {noreply, State}.
 
