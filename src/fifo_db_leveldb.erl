@@ -91,7 +91,7 @@ fold(Bucket, FoldFn, Acc0, From, State) ->
                                       when Bucket =:= ThisBucket ->
                                         FoldFn(Key, binary_to_term(Value), Acc);
                                     ({_, _}, Acc) ->
-                                        throw({done, Acc})
+                                        throw({ok, Acc})
                                 end, Acc0, [{first_key, Bucket}]) of
                   R ->
                       gen_server:reply(From, R)
@@ -112,7 +112,7 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
                                            when Bucket =:= ThisBucket ->
                                              FoldFn(Key, Acc);
                                          (_, Acc) ->
-                                             throw({done, Acc})
+                                             throw({ok, Acc})
                                      end, Acc0, [{first_key, Bucket}]) of
                   R ->
                       gen_server:reply(From, R)
