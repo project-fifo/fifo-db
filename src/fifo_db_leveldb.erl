@@ -96,7 +96,7 @@ fold(Bucket, FoldFn, Acc0, From, State) ->
                   R ->
                       gen_server:reply(From, R)
               catch
-                  R ->
+                  {ok, R} ->
                       gen_server:reply(From, R)
               end
       end),
@@ -117,7 +117,7 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
                   R ->
                       gen_server:reply(From, R)
               catch
-                  R ->
+                  {ok, R} ->
                       gen_server:reply(From, R)
               end
 
