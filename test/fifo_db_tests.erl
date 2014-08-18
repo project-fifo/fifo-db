@@ -16,6 +16,9 @@ init() ->
             ?assertEqual(ok, application:start(hanoidb)),
             ?assertEqual(ok, application:start(eleveldb)),
             ?assertEqual(ok, application:start(bitcask)),
+            ?assertEqual(ok, application:start(syntax_tools)),
+            ?assertEqual(ok, application:start(compiler)),
+            ?assertEqual(ok, application:start(goldrush)),
             ?assertEqual(ok, application:start(lager)),
             ?assertEqual(ok, application:start(fifo_db)),
             application:set_env(fifo_db, db_path, ?TEST_DIR)
