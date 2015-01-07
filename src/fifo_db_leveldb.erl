@@ -17,7 +17,9 @@
 -ignore_xref([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
               delete/4, terminate/2, code_change/3, list_keys/3]).
 
--record(state, {db}).
+-record(state, {
+          db = erlang:error(required) :: eleveldb:db_ref()
+         }).
 
 %%%===================================================================
 %%% API
