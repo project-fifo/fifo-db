@@ -3,21 +3,3 @@
 {mapping, "db.dir", "fifo_db.db_path",
  [{default, "{{db_path}}"},
   {datatype, string}]}.
-
-%% @doc Default database destination
-{mapping, "db.backend", "fifo_db.backend",
- [{default, leveldb},
-  {datatype, {enum, [leveldb, hanoidb, bitcask]}}]}.
-
-{translation,
- "fifo_db.backend",
- fun(Conf) ->
-         B = proplists:get_value(["db", "backend"], Conf),
-         case B of
-             hanoidb -> fifo_db_hanoidb;
-             bitcask -> fifo_db_bitcask;
-             leveldb -> fifo_db_leveldb;
-             _ -> B
-         end
- end
-}.
