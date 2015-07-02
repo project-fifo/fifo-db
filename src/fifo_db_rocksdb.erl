@@ -1,4 +1,3 @@
-
 %%%-------------------------------------------------------------------
 %%% @author Heinz Nikolaus Gies <heinz@licenser.net>
 %%% @copyright (C) 2013, Heinz Nikolaus Gies
@@ -7,7 +6,7 @@
 %%% @end
 %%% Created : 10 Jan 2013 by Heinz Nikolaus Gies <heinz@licenser.net>
 %%%-------------------------------------------------------------------
--module(fifo_db_leveldb).
+-module(fifo_db_rocksdb).
 
 -behaviour(fifo_db_driver).
 
@@ -19,7 +18,7 @@
               delete/4, terminate/2, code_change/3, list_keys/3]).
 
 -record(state, {
-          db = erlang:error(required) :: eleveldb:db_ref()
+          db = erlang:error(required) :: erocksdb:db_ref()
          }).
 
 %%%===================================================================
@@ -32,7 +31,7 @@ open_opts([K | Ks], Opts) ->
         true ->
             open_opts(Ks, Opts);
         _ ->
-            case application:get_env(eleveldb, K) of
+            case application:get_env(erocksdb, K) of
                 {ok, V} ->
                     open_opts(Ks, [{K, V} | Opts]);
                 _ ->
@@ -44,9 +43,9 @@ open_opts([], Opts) ->
     Opts.
 
 init(DBLoc, Name, Opts) ->
-    Keys = [total_leveldb_mem_percent, total_leveldb_mem, limited_developer_mem,
+    Keys = [total_rocksdb_mem_percent, total_rocksdb_mem, limited_developer_mem,
             use_bloomfiltar, sst_block_size, block_restart_interval,
-            verify_compaction, eleveldb_threads, fadvise_willneed,
+            verify_compaction, erocksdb_threads, fadvise_willneed,
             delete_threshold, mmap_size],
     Opts1 = open_opts(Keys, Opts),
     Opts2 = case proplists:is_defined(create_if_misisng, Opts1) of
@@ -55,11 +54,11 @@ init(DBLoc, Name, Opts) ->
                 false ->
                     [{create_if_missing, true} | Opts1]
             end,
-    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2),
+    {ok, Db} = erocksdb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2, []),
     {ok, #state{db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->
-    R = eleveldb:put(State#state.db, <<Bucket/binary, Key/binary>>,
+    R = erocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,
                      term_to_binary(Value), []),
     {reply, R, State}.
 
@@ -70,7 +69,7 @@ transact(Transaction, _From, State) ->
 get(Bucket, Key, From, State) ->
     spawn(
       fun () ->
-              case eleveldb:get(State#state.db,
+              case erocksdb:get(State#state.db,
                                 <<Bucket/binary, Key/binary>>, []) of
                   {ok, Bin} ->
                       gen_server:reply(From, {ok, binary_to_term(Bin)});
@@ -81,14 +80,14 @@ get(Bucket, Key, From, State) ->
     {noreply, State}.
 
 delete(Bucket, Key, _From, State) ->
-    R = eleveldb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
+    R = erocksdb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
     {reply, R, State}.
 
 fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
-              try eleveldb:fold(State#state.db,
+              try erocksdb:fold(State#state.db,
                                 fun ({<<ThisBucket:Len/binary, Key/binary>>,
                                       Value}, Acc)
                                       when Bucket =:= ThisBucket ->
@@ -109,7 +108,7 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
-              try eleveldb:fold_keys(State#state.db,
+              try erocksdb:fold_keys(State#state.db,
                                      fun (<<ThisBucket:Len/binary, Key/binary>>,
                                           Acc)
                                            when Bucket =:= ThisBucket ->
@@ -135,7 +134,7 @@ list_keys(Bucket, _From, State) ->
 
 
 terminate(_Reason, #state{db = Db}) ->
-    eleveldb:close(Db).
+    erocksdb:close(Db).
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -145,10 +144,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 transact_int(DB, [{put, K, V} | R]) ->
-    eleveldb:put(DB, K, V, []),
+    erocksdb:put(DB, K, V, []),
     transact_int(DB, R);
 transact_int(DB, [{delete, K} | R]) ->
-    eleveldb:delete(DB, K, []),
+    erocksdb:delete(DB, K, []),
     transact_int(DB, R);
 transact_int(_DB, []) ->
     ok.

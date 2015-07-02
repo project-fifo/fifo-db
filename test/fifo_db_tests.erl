@@ -13,9 +13,8 @@ init() ->
         true ->
             ok;
         false ->
-            ?assertEqual(ok, application:start(hanoidb)),
+            ?assertEqual(ok, application:start(erocksdb)),
             ?assertEqual(ok, application:start(eleveldb)),
-            ?assertEqual(ok, application:start(bitcask)),
             ?assertEqual(ok, application:start(syntax_tools)),
             ?assertEqual(ok, application:start(compiler)),
             ?assertEqual(ok, application:start(goldrush)),
@@ -62,11 +61,8 @@ db_tester(Name, Backend) ->
     clean_data(),
     ok.
 
-hanoidb_test() ->
-    db_tester(test_hanidb, fifo_db_hanoidb).
-
-bitcask_test() ->
-    db_tester(test_bitcask, fifo_db_bitcask).
+erocksdb_test() ->
+    db_tester(test_rocksdb, fifo_db_rocksdb).
 
 eleveldb_test() ->
     db_tester(test_leveldb, fifo_db_leveldb).
