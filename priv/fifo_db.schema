@@ -3,3 +3,21 @@
 {mapping, "db.dir", "fifo_db.db_path",
  [{default, "{{db_path}}"},
   {datatype, string}]}.
+
+%% @doc Default database destination
+{mapping, "db.backend", "fifo_db.backend",
+ [{default, leveldb},
+  hidden,
+  {datatype, {enum, [leveldb, rocksdb]}}]}.
+
+{translation,
+ "fifo_db.backend",
+ fun(Conf) ->
+         B = proplists:get_value(["db", "backend"], Conf),
+         case B of
+             leveldb -> fifo_db_leveldb;
+             rocksdb -> fifo_db_rocksdb;
+             _ -> B
+         end
+ end
+}.
