@@ -1,7 +1,7 @@
 [{<<"eleveldb">>,{pkg,<<"eleveldb">>,<<"2.1.3">>},0},
  {<<"erocksdb">>,
   {git,"https://github.com/project-fifo/erocksdb.git",
-       {ref,"d7717b2d0bd8de03a01db553b2aa431f0e8cab4c"}},
+       {ref,"f50f85d6566c5c733769b299b4b43d0c72c4af85"}},
   0},
  {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.7">>},1},
  {<<"lager">>,{pkg,<<"lager">>,<<"3.0.2">>},0}].
