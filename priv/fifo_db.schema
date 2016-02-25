@@ -6,8 +6,7 @@
 
 %% @doc Default database destination
 {mapping, "db.backend", "fifo_db.backend",
- [{default, leveldb},
-  hidden,
+ [{default, rocksdb},
   {datatype, {enum, [leveldb, rocksdb]}}]}.
 
 {translation,
