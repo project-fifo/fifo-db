@@ -54,7 +54,7 @@ start(Name) ->
     start(Name, []).
 
 start(Name, Opts) ->
-    start(Name, fifo_db_leveldb, Opts).
+    start(Name, application:get_env(fifo_db, backend, fifo_db_leveldb), Opts).
 
 start(Name, Backend, Opts) ->
     case erlang:whereis(Name) of
