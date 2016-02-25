@@ -4,7 +4,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--define(TEST_DIR, "../test/data").
+-define(TEST_DIR, "test/data").
 
 init() ->
     case proplists:is_defined(

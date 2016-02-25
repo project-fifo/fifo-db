@@ -6,6 +6,7 @@
   {applications, [
                   kernel,
                   eleveldb,
+                  erocksdb,
                   lager,
                   stdlib
                  ]},
