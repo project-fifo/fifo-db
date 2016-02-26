@@ -87,14 +87,17 @@ fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
+              %% {first_key, Bucket} seems not to be supported by rocksdb right
+              %%now
               try erocksdb:fold(State#state.db,
                                 fun ({<<ThisBucket:Len/binary, Key/binary>>,
                                       Value}, Acc)
                                       when Bucket =:= ThisBucket ->
                                         FoldFn(Key, binary_to_term(Value), Acc);
                                     ({_, _}, Acc) ->
-                                        throw({ok, Acc})
-                                end, Acc0, [{first_key, Bucket}]) of
+                                        Acc
+                                end, Acc0, []) of
+
                   R ->
                       gen_server:reply(From, R)
               catch
@@ -108,14 +111,17 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
       fun () ->
               Len = byte_size(Bucket),
+              %% {first_key, Bucket} seems not to be supported by rocksdb right
+              %% now
+              %% TODO: improve this
               try erocksdb:fold_keys(State#state.db,
                                      fun (<<ThisBucket:Len/binary, Key/binary>>,
                                           Acc)
                                            when Bucket =:= ThisBucket ->
                                              FoldFn(Key, Acc);
                                          (_, Acc) ->
-                                             throw({ok, Acc})
-                                     end, Acc0, [{first_key, Bucket}]) of
+                                             Acc
+                                     end, Acc0, []) of
                   R ->
                       gen_server:reply(From, R)
               catch
