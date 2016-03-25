@@ -20,6 +20,7 @@
          get/3,
          transact/2,
          delete/3,
+         destroy/1,
          put/4,
          fold/4,
          fold_keys/4,
@@ -78,6 +79,9 @@ sync_get(Name, Bucket, Key) ->
 
 delete(Name, Bucket, Key) ->
     gen_server:call(Name, {delete, Bucket, Key}).
+
+destroy(Name) ->
+    gen_server:call(Name, destroy).
 
 fold(Name, Bucket, FoldFn, Acc0) ->
     gen_server:call(Name, {fold, Bucket, FoldFn, Acc0}).
@@ -147,6 +151,10 @@ handle_call({delete, Bucket, Key}, From, {Backend, State}) ->
         {noreply, State1} ->
             {noreply, {Backend, State1}}
     end;
+
+handle_call(destroy, _From, {Backend, State}) ->
+    ok = Backend:destroy(State),
+    {stop, shutdown, {Backend, State}};
 
 handle_call({list_keys, Bucket}, From, {Backend, State}) ->
     case Backend:list_keys(Bucket, From, State) of

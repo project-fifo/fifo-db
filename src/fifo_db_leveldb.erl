@@ -13,10 +13,7 @@
 
 %% API
 -export([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
-         delete/4, terminate/2, code_change/3, list_keys/3]).
-
--ignore_xref([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
-              delete/4, terminate/2, code_change/3, list_keys/3]).
+         delete/4, destroy/1, terminate/2, code_change/3, list_keys/3]).
 
 -record(state, {
           db = erlang:error(required) :: eleveldb:db_ref()
@@ -83,6 +80,9 @@ get(Bucket, Key, From, State) ->
 delete(Bucket, Key, _From, State) ->
     R = eleveldb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
     {reply, R, State}.
+
+destroy(State) ->
+    eleveldb:destroy(State#state.db, []).
 
 fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(

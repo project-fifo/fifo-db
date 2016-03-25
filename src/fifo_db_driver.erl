@@ -21,14 +21,21 @@
 -callback put(Bucket::binary(), Keyt::binary(), Value::term(), _From::pid(),
               State::term()) ->
     calback_reply().
+
 -callback transact(Transaction::[transaction_op()], From::pid(),
                    State::term()) ->
     calback_reply().
+
 -callback get(Buckett::binary(), Key::binary(), From::pid(), State::term()) ->
     calback_reply().
+
+-callback destroy(State::term()) ->
+    ok.
+
 -callback delete(Bucket::binary(), Key::binary(), _From::pid(),
                  State::term()) ->
     calback_reply().
+
 -callback fold(Bucket::binary(), FoldFn::fold_fn(), Acc0::term(),
                From::pid(), State::term()) ->
     calback_reply().
@@ -40,6 +47,7 @@
 
 -callback terminate(Reason::atom(), State::term()) ->
     ok.
+
 -callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
     {ok, State::term()}.
 
