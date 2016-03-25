@@ -12,11 +12,13 @@
 
 %% API
 -export([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
-         destroy/1, delete/4, terminate/2, code_change/3, list_keys/3]).
+         ensure_running/1, destroy/1, delete/4, terminate/2, code_change/3,
+         list_keys/3]).
 
 -record(state, {
+          opts = [] :: [atom() | {atom(), term()}],
           name = erlang:error(required) :: file:filename_all(),
-          db = erlang:error(required) :: erocksdb:db_ref()
+          db :: erocksdb:db_ref()
          }).
 
 %%%===================================================================
@@ -53,8 +55,15 @@ init(DBLoc, Name, Opts) ->
                     [{create_if_missing, true} | Opts1]
             end,
     FName = DBLoc ++ "/" ++ atom_to_list(Name),
-    {ok, Db} = erocksdb:open(FName, Opts2, []),
-    {ok, #state{name = FName, db = Db}}.
+    State = #state{opts = Opts2, name = FName},
+    {ok, ensure_running(State)}.
+
+
+ensure_running(State = #state{db = undefined, name=Name, opts = Opts}) ->
+    {ok, DB} = erocksdb:open(Name, Opts, []),
+    State#state{db = DB};
+ensure_running(State) ->
+    State.
 
 put(Bucket, Key, Value, _From, State) ->
     R = erocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,

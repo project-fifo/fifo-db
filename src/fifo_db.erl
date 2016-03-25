@@ -61,8 +61,8 @@ start(Name, Backend, Opts) ->
     case erlang:whereis(Name) of
         undefined ->
             fifo_db_sup:start_child(Name, Backend, Opts);
-        _ ->
-            ok
+        Pid ->
+            gen_server:call(Pid, ensure_running)
     end.
 
 transact(Name, Transaction) ->
@@ -120,6 +120,9 @@ init(P) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(ensure_running, _From, {Backend, State}) ->
+    {reply, ok, {Backend, Backend:ensure_running(State)}};
+    
 handle_call({put, Bucket, Key, Value}, From, {Backend, State}) ->
     case Backend:put(Bucket, Key, Value, From, State)  of
         {reply, Reply, State1} ->

@@ -18,6 +18,9 @@
 -callback init(DBLock::string(), Name::atom(), Opts::[term()]) ->
     {ok, State::term()}.
 
+-callback ensure_running(State::term()) ->
+    {ok, State::term()}.
+
 -callback put(Bucket::binary(), Keyt::binary(), Value::term(), _From::pid(),
               State::term()) ->
     calback_reply().

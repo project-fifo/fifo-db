@@ -13,11 +13,13 @@
 
 %% API
 -export([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
-         delete/4, destroy/1, terminate/2, code_change/3, list_keys/3]).
+         ensure_running/1, delete/4, destroy/1, terminate/2, code_change/3,
+         list_keys/3]).
 
 -record(state, {
+          opts = [] :: [atom() | {atom(), term()}],
           name = erlang:error(required) :: file:filename_all(),
-          db = erlang:error(required) :: eleveldb:db_ref()
+          db :: eleveldb:db_ref()
          }).
 
 %%%===================================================================
@@ -54,8 +56,13 @@ init(DBLoc, Name, Opts) ->
                     [{create_if_missing, true} | Opts1]
             end,
     FName = DBLoc ++ "/" ++ atom_to_list(Name),
-    {ok, Db} = eleveldb:open(FName, Opts2),
-    {ok, #state{name = FName, db = Db}}.
+    {ok, ensure_running(#state{name = FName, opts = Opts2})}.
+
+ensure_running(State = #state{db = undefined, name=Name, opts = Opts}) ->
+    {ok, DB} = eleveldb:open(Name, Opts),
+    State#state{db = DB};
+ensure_running(State) ->
+    State.
 
 put(Bucket, Key, Value, _From, State) ->
     R = eleveldb:put(State#state.db, <<Bucket/binary, Key/binary>>,
