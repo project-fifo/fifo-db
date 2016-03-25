@@ -15,6 +15,7 @@
          destroy/1, delete/4, terminate/2, code_change/3, list_keys/3]).
 
 -record(state, {
+          name = erlang:error(required) :: file:filename_all(),
           db = erlang:error(required) :: erocksdb:db_ref()
          }).
 
@@ -52,7 +53,7 @@ init(DBLoc, Name, Opts) ->
                     [{create_if_missing, true} | Opts1]
             end,
     {ok, Db} = erocksdb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2, []),
-    {ok, #state{db = Db}}.
+    {ok, #state{name = Name, db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->
     R = erocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,
@@ -81,7 +82,8 @@ delete(Bucket, Key, _From, State) ->
     {reply, R, State}.
 
 destroy(State) ->
-    erocksdb:destroy(State#state.db, []).
+    erocksdb:close(State#state.db),
+    erocksdb:destroy(State#state.name, []).
 
 fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
