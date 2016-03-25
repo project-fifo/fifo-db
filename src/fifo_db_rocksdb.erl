@@ -52,8 +52,9 @@ init(DBLoc, Name, Opts) ->
                 false ->
                     [{create_if_missing, true} | Opts1]
             end,
-    {ok, Db} = erocksdb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2, []),
-    {ok, #state{name = Name, db = Db}}.
+    FName = DBLoc ++ "/" ++ atom_to_list(Name),
+    {ok, Db} = erocksdb:open(FName, Opts2, []),
+    {ok, #state{name = FName, db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->
     R = erocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,

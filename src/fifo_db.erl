@@ -218,7 +218,12 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 terminate(Reason, {Backend, State}) ->
-    Backend:terminate(Reason, State).
+    try
+        Backend:terminate(Reason, State)
+    catch
+        E:E1 ->
+            lager:error("[fifodb] Error terminating database: ~p:~p", [E, E1])
+    end.
 
 %%--------------------------------------------------------------------
 %% @private

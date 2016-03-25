@@ -53,8 +53,9 @@ init(DBLoc, Name, Opts) ->
                 false ->
                     [{create_if_missing, true} | Opts1]
             end,
-    {ok, Db} = eleveldb:open(DBLoc ++ "/" ++ atom_to_list(Name), Opts2),
-    {ok, #state{name = Name, db = Db}}.
+    FName = DBLoc ++ "/" ++ atom_to_list(Name),
+    {ok, Db} = eleveldb:open(FName, Opts2),
+    {ok, #state{name = FName, db = Db}}.
 
 put(Bucket, Key, Value, _From, State) ->
     R = eleveldb:put(State#state.db, <<Bucket/binary, Key/binary>>,
