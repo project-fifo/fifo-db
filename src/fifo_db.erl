@@ -154,7 +154,7 @@ handle_call({delete, Bucket, Key}, From, {Backend, State}) ->
 
 handle_call(destroy, _From, {Backend, State}) ->
     {ok, State1} = Backend:destroy(State),
-    {stop, shutdown, {Backend, State1}};
+    {reply, ok, {Backend, State1}};
 
 handle_call({list_keys, Bucket}, From, {Backend, State}) ->
     case Backend:list_keys(Bucket, From, State) of
