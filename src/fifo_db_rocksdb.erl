@@ -83,7 +83,7 @@ delete(Bucket, Key, _From, State) ->
 
 destroy(State) ->
     erocksdb:close(State#state.db),
-    erocksdb:destroy(State#state.name, []).
+    {erocksdb:destroy(State#state.name, []), State#state{db = undefined}}.
 
 fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
@@ -141,6 +141,8 @@ list_keys(Bucket, _From, State) ->
     fold_keys(Bucket, FoldFn, [], _From, State).
 
 
+terminate(_Reason, #state{db = undefined}) ->
+    ok;
 terminate(_Reason, #state{db = Db}) ->
     erocksdb:close(Db).
 

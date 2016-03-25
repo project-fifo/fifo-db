@@ -30,7 +30,7 @@
     calback_reply().
 
 -callback destroy(State::term()) ->
-    ok.
+    {ok, State::term()}.
 
 -callback delete(Bucket::binary(), Key::binary(), _From::pid(),
                  State::term()) ->
@@ -46,11 +46,10 @@
     calback_reply([binary()]).
 
 -callback terminate(Reason::atom(), State::term()) ->
-    ok.
-
--callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
     {ok, State::term()}.
 
+-callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
+    ok.
 
 -spec encode_key({Bucket::binary(), Key::binary()}) -> binary().
 encode_key({Bucket, Key}) ->
