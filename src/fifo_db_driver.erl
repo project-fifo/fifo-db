@@ -13,8 +13,6 @@
 -type transaction_op() :: {delete, Key::binary()} |
                           {put, Key::binary(), Value::term()}.
 
-
-
 -callback init(DBLock::string(), Name::atom(), Opts::[term()]) ->
     {ok, State::term()}.
 
@@ -49,10 +47,10 @@
     calback_reply([binary()]).
 
 -callback terminate(Reason::atom(), State::term()) ->
-    {ok, State::term()}.
+    ok | {error, term()}.
 
 -callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
-    ok.
+    {ok, term()}.
 
 -spec encode_key({Bucket::binary(), Key::binary()}) -> binary().
 encode_key({Bucket, Key}) ->

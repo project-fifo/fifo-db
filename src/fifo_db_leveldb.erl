@@ -19,7 +19,7 @@
 -record(state, {
           opts = [] :: [atom() | {atom(), term()}],
           name = erlang:error(required) :: file:filename_all(),
-          db :: eleveldb:db_ref()
+          db :: undefined | eleveldb:db_ref()
          }).
 
 %%%===================================================================

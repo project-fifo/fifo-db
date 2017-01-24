@@ -18,7 +18,7 @@
 -record(state, {
           opts = [] :: [atom() | {atom(), term()}],
           name = erlang:error(required) :: file:filename_all(),
-          db :: erocksdb:db_ref()
+          db :: undefined | erocksdb:db_ref()
          }).
 
 %%%===================================================================
