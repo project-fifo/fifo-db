@@ -1,5 +1,6 @@
 language: erlang
 otp_release:
   - R18
+  - R19
 notifications:
   irc: "irc.freenode.org#project-FiFo"
