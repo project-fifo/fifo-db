@@ -18,7 +18,7 @@
 -record(state, {
           opts = [] :: [atom() | {atom(), term()}],
           name = erlang:error(required) :: file:filename_all(),
-          db :: undefined | erocksdb:db_ref()
+          db :: undefined | rocksdb:db_ref()
          }).
 
 %%%===================================================================
@@ -31,7 +31,7 @@ open_opts([K | Ks], Opts) ->
         true ->
             open_opts(Ks, Opts);
         _ ->
-            case application:get_env(erocksdb, K) of
+            case application:get_env(rocksdb, K) of
                 {ok, V} ->
                     open_opts(Ks, [{K, V} | Opts]);
                 _ ->
@@ -45,7 +45,7 @@ open_opts([], Opts) ->
 init(DBLoc, Name, Opts) ->
     Keys = [total_rocksdb_mem_percent, total_rocksdb_mem, limited_developer_mem,
             use_bloomfiltar, sst_block_size, block_restart_interval,
-            verify_compaction, erocksdb_threads, fadvise_willneed,
+            verify_compaction, rocksdb_threads, fadvise_willneed,
             delete_threshold, mmap_size],
     Opts1 = open_opts(Keys, Opts),
     Opts2 = case proplists:is_defined(create_if_misisng, Opts1) of
@@ -60,13 +60,13 @@ init(DBLoc, Name, Opts) ->
 
 
 ensure_running(State = #state{db = undefined, name=Name, opts = Opts}) ->
-    {ok, DB} = erocksdb:open(Name, Opts, []),
+    {ok, DB} = rocksdb:open(Name, Opts),
     State#state{db = DB};
 ensure_running(State) ->
     State.
 
 put(Bucket, Key, Value, _From, State) ->
-    R = erocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,
+    R = rocksdb:put(State#state.db, <<Bucket/binary, Key/binary>>,
                      term_to_binary(Value), []),
     {reply, R, State}.
 
@@ -77,7 +77,7 @@ transact(Transaction, _From, State) ->
 get(Bucket, Key, From, State) ->
     spawn(
       fun () ->
-              case erocksdb:get(State#state.db,
+              case rocksdb:get(State#state.db,
                                 <<Bucket/binary, Key/binary>>, []) of
                   {ok, Bin} ->
                       gen_server:reply(From, {ok, binary_to_term(Bin)});
@@ -88,12 +88,12 @@ get(Bucket, Key, From, State) ->
     {noreply, State}.
 
 delete(Bucket, Key, _From, State) ->
-    R = erocksdb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
+    R = rocksdb:delete(State#state.db, <<Bucket/binary, Key/binary>>, []),
     {reply, R, State}.
 
 destroy(State) ->
-    erocksdb:close(State#state.db),
-    {erocksdb:destroy(State#state.name, []), State#state{db = undefined}}.
+    rocksdb:close(State#state.db),
+    {rocksdb:destroy(State#state.name, []), State#state{db = undefined}}.
 
 fold(Bucket, FoldFn, Acc0, From, State) ->
     spawn(
@@ -101,7 +101,7 @@ fold(Bucket, FoldFn, Acc0, From, State) ->
               Len = byte_size(Bucket),
               %% {first_key, Bucket} seems not to be supported by rocksdb right
               %%now
-              try erocksdb:fold(State#state.db,
+              try rocksdb:fold(State#state.db,
                                 fun ({<<ThisBucket:Len/binary, Key/binary>>,
                                       Value}, Acc)
                                       when Bucket =:= ThisBucket ->
@@ -126,7 +126,7 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
               %% {first_key, Bucket} seems not to be supported by rocksdb right
               %% now
               %% TODO: improve this
-              try erocksdb:fold_keys(State#state.db,
+              try rocksdb:fold_keys(State#state.db,
                                      fun (<<ThisBucket:Len/binary, Key/binary>>,
                                           Acc)
                                            when Bucket =:= ThisBucket ->
@@ -154,7 +154,7 @@ list_keys(Bucket, _From, State) ->
 terminate(_Reason, #state{db = undefined}) ->
     ok;
 terminate(_Reason, #state{db = Db}) ->
-    erocksdb:close(Db).
+    rocksdb:close(Db).
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -164,10 +164,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 transact_int(DB, [{put, K, V} | R]) ->
-    erocksdb:put(DB, K, V, []),
+    rocksdb:put(DB, K, V, []),
     transact_int(DB, R);
 transact_int(DB, [{delete, K} | R]) ->
-    erocksdb:delete(DB, K, []),
+    rocksdb:delete(DB, K, []),
     transact_int(DB, R);
 transact_int(_DB, []) ->
     ok.

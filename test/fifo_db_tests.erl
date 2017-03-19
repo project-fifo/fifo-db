@@ -13,7 +13,7 @@ init() ->
         true ->
             ok;
         false ->
-            ?assertEqual(ok, application:start(erocksdb)),
+            ?assertEqual(ok, application:start(rocksdb)),
             ?assertEqual(ok, application:start(eleveldb)),
             ?assertEqual(ok, application:start(syntax_tools)),
             ?assertEqual(ok, application:start(compiler)),
@@ -61,7 +61,7 @@ db_tester(Name, Backend) ->
     clean_data(),
     ok.
 
-erocksdb_test() ->
+rocksdb_test() ->
     db_tester(test_rocksdb, fifo_db_rocksdb).
 
 eleveldb_test() ->

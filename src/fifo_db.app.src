@@ -2,7 +2,7 @@
              [{description,"Project-FiFo db wrapper"},
               {vsn,"0.2.4"},
               {registered,[]},
-              {applications,[kernel,eleveldb,erocksdb,lager,stdlib]},
+              {applications,[kernel,eleveldb,rocksdb,lager,stdlib]},
               {mod,{fifo_db_app,[]}},
               {env,[{backend,fifo_db_leveldb}]},
               {maintainers,["Heinz N. Gies"]},
