@@ -26,9 +26,64 @@
          fold_keys/4,
          list_keys/2]).
 
+-export([encode_key/1, encode_key/2, decode_key/1]).
+
+
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
+
+
+-type calback_reply() :: calback_reply(any()).
+-type calback_reply(ReplyType) :: {noreply, State::term()} |
+                         {reply, Reply::ReplyType, State::term()}.
+
+-type fold_fn() :: fun((Key::binary(), Value::term(), Acc) -> Acc).
+
+-type fold_key_fn() :: fun((Key::binary(), Acc) -> Acc).
+
+-type transaction_op() :: {delete, Key::binary()} |
+                          {put, Key::binary(), Value::term()}.
+
+-callback init(DBLock::string(), Name::atom(), Opts::[term()]) ->
+    {ok, State::term()}.
+
+-callback ensure_running(State::term()) ->
+    {ok, State::term()}.
+
+-callback put(Bucket::binary(), Keyt::binary(), Value::term(), _From::pid(),
+              State::term()) ->
+    calback_reply().
+
+-callback transact(Transaction::[transaction_op()], From::pid(),
+                   State::term()) ->
+    calback_reply().
+
+-callback get(Buckett::binary(), Key::binary(), From::pid(), State::term()) ->
+    calback_reply().
+
+-callback destroy(State::term()) ->
+    {ok, State::term()}.
+
+-callback delete(Bucket::binary(), Key::binary(), _From::pid(),
+                 State::term()) ->
+    calback_reply().
+
+-callback fold(Bucket::binary(), FoldFn::fold_fn(), Acc0::term(),
+               From::pid(), State::term()) ->
+    calback_reply().
+-callback fold_keys(Bucket::binary(), FoldFn::fold_key_fn(), Acc0::term(),
+                    From::pid(), State::term()) ->
+    calback_reply().
+-callback list_keys(Bucket::binary(), _From::pid(), State::term()) ->
+    calback_reply([binary()]).
+
+-callback terminate(Reason::atom(), State::term()) ->
+    ok | {error, term()}.
+
+-callback code_change(OldVsn::term(), State::term(), Extra::term()) ->
+    {ok, term()}.
+
 
 -ignore_xref([start_link/1, fold_keys/4]).
 
@@ -36,9 +91,19 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
-%%%===================================================================
-%%% API
-%%%===================================================================
+
+-spec encode_key({Bucket::binary(), Key::binary()}) -> binary().
+encode_key({Bucket, Key}) ->
+    encode_key(Bucket, Key).
+
+-spec encode_key(Bucket::binary(), Key::binary()) -> binary().
+encode_key(Bucket, Key) ->
+    Len = byte_size(Bucket),
+    <<Len:16, Bucket/binary, Key/binary>>.
+
+-spec decode_key(BucketKey::binary()) -> {Bucket::binary(), Key::binary()}.
+decode_key(<<Len:16, Bucket:Len/binary, Key/binary>>) ->
+    {Bucket, Key}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -99,7 +164,8 @@ list_keys(Name, Bucket) ->
 init([Name, Backend, Opts]) when is_atom(Name),
                                  is_atom(Backend) ->
     {ok, DBLoc} = application:get_env(fifo_db, db_path),
-    lager:info("Opening ~s  in ~s as backend ~p with options: ~p", [Name, DBLoc, Backend, Opts]),
+    lager:info("Opening ~s  in ~s as backend ~p with options: ~p",
+               [Name, DBLoc, Backend, Opts]),
     {ok, State} = Backend:init(DBLoc, Name, Opts),
     {ok, {Backend, State}};
 init(P) ->
@@ -122,7 +188,7 @@ init(P) ->
 %%--------------------------------------------------------------------
 handle_call(ensure_running, _From, {Backend, State}) ->
     {reply, ok, {Backend, Backend:ensure_running(State)}};
-    
+
 handle_call({put, Bucket, Key, Value}, From, {Backend, State}) ->
     case Backend:put(Bucket, Key, Value, From, State)  of
         {reply, Reply, State1} ->

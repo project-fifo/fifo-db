@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(fifo_db_rocksdb).
 
--behaviour(fifo_db_driver).
+-behaviour(fifo_db).
 
 %% API
 -export([init/3, put/5, transact/3, get/4, fold/5, fold_keys/5,
@@ -144,12 +144,11 @@ fold_keys(Bucket, FoldFn, Acc0, From, State) ->
       end),
     {noreply, State}.
 
-list_keys(Bucket, _From, State) ->
+list_keys(Bucket, From, State) ->
     FoldFn = fun(K, Ks) ->
                      [K | Ks]
              end,
-    fold_keys(Bucket, FoldFn, [], _From, State).
-
+    fold_keys(Bucket, FoldFn, [], From, State).
 
 terminate(_Reason, #state{db = undefined}) ->
     ok;
